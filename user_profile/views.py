@@ -6,17 +6,23 @@ import secrets
 from .serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework import status
 import jwt, datetime
 
 class RegisterView(APIView):
-    def post(self,request):
-        User.objects.create()
-        serializer = UserSerializer(data = request.data)
-        serializer.is_valid(raise_exception = True)
-        serializer.save()
-        return Response(serializer.data)
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            response_data = {
+                'username': user.username,
+                'email': user.email,
+                'password': user.password,  
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Create your views here.
 class LoginView(APIView):
     def post(self,request):
         email = request.data['email']
